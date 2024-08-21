@@ -16,7 +16,7 @@ func (n *Node) IsLeaf() bool {
 
 // Prints the given tree with root node at the top and children below it.
 // Uses a slash/backslash/underscore for connector drawing and spaces for alignment.
-// Returned Rendering is normalized.
+// Returned Rendering is NOT normalized.
 func PrintTree(curNode *Node) *render.Rendering {
 
 	if curNode == nil || curNode.Value == "" {
@@ -34,8 +34,8 @@ func PrintTree(curNode *Node) *render.Rendering {
 	// This ensures that connector lines will be drawn correctly.
 	leftChildRendering.NormalizeOffsetsRev()
 
-	// Print the right child. No need to reindex it, because the top row value already starts at the zero index which is what we want.
-	rightChildRendering := PrintTree(curNode.RightChild)
+	// Print the right child.
+	rightChildRendering := PrintTree(curNode.RightChild).NormalizeOffsets()
 
 	// Calculate the distance between the children. The distance corresponds to the number of characters between the zero index of the left child and the zero index of the right child,
 	// when both child are placed as close as possible (touching but not overlapping).
@@ -53,31 +53,31 @@ func PrintTree(curNode *Node) *render.Rendering {
 		distance = requiredChildDistance
 	}
 
+	// This is required to achieve symmetric rendering.
 	if (distance-len(curNode.Value))%2 == 1 {
 		distance += 1
 	}
 
-	joinedChildren := render.JoinRenderings(leftChildRendering, rightChildRendering, distance)
+	result := render.JoinRenderings(leftChildRendering, rightChildRendering, distance)
 
 	// Print the connectors. The connectors span three rows: lower connector row (closest to children), middle connector row and upper connector row (closest to parent).
 	// lower row:
 	lowerRowSpacesCnt := (distance - 2) // 2 is for the two slashes
-	joinedChildren.AddOnTop("/" + render.Spaces(lowerRowSpacesCnt) + "\\")
+	result.AddOnTop("/" + render.Spaces(lowerRowSpacesCnt) + "\\")
 
 	// middle row:
 	middleRowSpacesCnt := len(curNode.Value) + 2 // 2 is for the two slashes
 	middleRowUnderscoreCount := (lowerRowSpacesCnt-middleRowSpacesCnt)/2 - 1
-	joinedChildren.AddOnTop(render.Underscores(middleRowUnderscoreCount) + "/" + render.Spaces(len(curNode.Value)+2) + "\\" + render.Underscores(middleRowUnderscoreCount)).ShiftTopBy(1)
+	result.AddOnTop(render.Underscores(middleRowUnderscoreCount) + "/" + render.Spaces(len(curNode.Value)+2) + "\\" + render.Underscores(middleRowUnderscoreCount)).ShiftTopBy(1)
 
-	shift := (distance - len(curNode.Value)) / 2
 	// upper row:
-	joinedChildren.AddOnTop("/" + render.Spaces(len(curNode.Value)) + "\\").ShiftTopBy(shift - 1)
+	shift := ((distance - len(curNode.Value)) / 2) - 1
+	result.AddOnTop("/" + render.Spaces(len(curNode.Value)) + "\\").ShiftTopBy(shift)
 
 	// parent value
-	joinedChildren.AddOnTop(curNode.Value).ShiftTopBy(shift)
-	joinedChildren.NormalizeOffsets()
+	result.AddOnTop(curNode.Value).ShiftTopBy(shift + 1)
 
-	return joinedChildren
+	return result
 }
 
 /*
