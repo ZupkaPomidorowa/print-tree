@@ -11,6 +11,8 @@ The drawing style assumes/requires the following constraints:
 
 Besides the above constraints, except of node values, the tree itself is printed using just four characters: a space, slash, backslash and underscore.
 
+**Note**: The printer was initially intended to be used for rendering trees for arithmetical expressions, but I decided to make it more generic and use arbitrary strings as values. After all "atan(x)" may be a valid part of expression :)
+
 ## Pre-requisites
 - Go 1.22 or later
 
